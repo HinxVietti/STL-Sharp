@@ -19,6 +19,6 @@ easy read stl Binary file
 
 # Docoments
 
- [FDD000505]("https://www.loc.gov/preservation/digital/formats/fdd/fdd000505.shtml") from LOC.GOV
+ [FDD000505](https://www.loc.gov/preservation/digital/formats/fdd/fdd000505.shtml) from LOC.GOV
  
- [STL Format]("https://en.wikipedia.org/wiki/STL_(file_format)") from WIKI
+ [STL Format](https://en.wikipedia.org/wiki/STL_(file_format)) from WIKI
