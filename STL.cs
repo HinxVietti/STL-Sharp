@@ -87,19 +87,19 @@ public class STL_Header
 
 public class STL_Triangle
 {
-    public int[] Normal;
-    public int[] Vertex1;
-    public int[] Vertex2;
-    public int[] Vertex3;
+    public float[] Normal;
+    public float[] Vertex1;
+    public float[] Vertex2;
+    public float[] Vertex3;
     public ushort AttrData;
 
 
     private STL_Triangle()
     {
-        Normal = new int[3];
-        Vertex1 = new int[3];
-        Vertex2 = new int[3];
-        Vertex3 = new int[3];
+        Normal =  new float[3];
+        Vertex1 = new float[3];
+        Vertex2 = new float[3];
+        Vertex3 = new float[3];
     }
 
     public static STL_Triangle Create(byte[] data)
@@ -108,22 +108,22 @@ public class STL_Triangle
         {
             int position = 0;
 
-            Func</*byte[], */int> _readInt = () =>
+            Func</*byte[], */float> _readFloat = () =>
             {
                 position += 4;
-                return BitConverter.ToInt32(data, position - 4);
+                return BitConverter.ToSingle(data, position - 4);
             };
 
             var tar = new STL_Triangle();
 
             for (int i = 0; i < 3; i++)
-                tar.Normal[i] = _readInt();
+                tar.Normal[i] = _readFloat();
             for (int i = 0; i < 3; i++)
-                tar.Vertex1[i] = _readInt();
+                tar.Vertex1[i] = _readFloat();
             for (int i = 0; i < 3; i++)
-                tar.Vertex2[i] = _readInt();
+                tar.Vertex2[i] = _readFloat();
             for (int i = 0; i < 3; i++)
-                tar.Vertex3[i] = _readInt();
+                tar.Vertex3[i] = _readFloat();
 
             tar.AttrData = BitConverter.ToUInt16(data, 48);
             return tar;
@@ -131,4 +131,3 @@ public class STL_Triangle
         return null;
     }
 }
-
