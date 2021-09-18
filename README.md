@@ -10,7 +10,7 @@ easy read stl Binary file
     string fileName = @"D:\xxx\xxx\sample.stl";
     using(var fs = System.IO.File.OpenRead(fileName)
     {
-      var stl = STL.CreateFromBinary();
+      var stl = STL.CreateFromBinary(fs);
       //do something you want.
     }
 ```
