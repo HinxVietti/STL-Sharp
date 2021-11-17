@@ -1,9 +1,9 @@
 using System;
-
-
+using System.Text;
 
 public class STL
 {
+    public const int TriangleCountRawDataLength = 4;
     public STL_Header header;
     public int TriangleCount;
     public STL_Triangle[] triangles;
@@ -24,24 +24,32 @@ public class STL
     private STL()
     { }
 
+
+
+    public static STL CreateEmpty()
+    {
+        return new STL();
+    }
+
     public static STL CreateFromBinary(System.IO.Stream stream)
     {
         try
         {
-            int minSize = 80 + 4 + 50;
+            // header 80 + count 4 + (Triangle 50) * count
+            int minSize = STL_Header.STL_HEADER_SIZE + TriangleCountRawDataLength + STL_Triangle.TriangleRawDataLength;
             if (stream == null || stream.Length < minSize)
                 throw new STLStreamNotLegalException($"NOT AN LEGAL STL , STREAM SIZE Lessthan {minSize}");
 
-            var header = new byte[80];
-            var count = new byte[4];
-            var triArr = new byte[50];
+            var header = new byte[STL_Header.STL_HEADER_SIZE];
+            var count = new byte[TriangleCountRawDataLength];
+            var triArr = new byte[STL_Triangle.TriangleRawDataLength];
 
             stream.Position = 0;
             stream.Read(header, 0, header.Length);
             stream.Read(count, 0, count.Length);
 
             int numbers = BitConverter.ToInt32(count, 0);
-            var preferSize = numbers * 50 + 84;
+            var preferSize = numbers * STL_Triangle.TriangleRawDataLength + TriangleCountRawDataLength + STL_Header.STL_HEADER_SIZE;// 4 : int -> byte[4]
             if (preferSize != stream.Length)
                 throw new STLStreamNotLegalException("NOT AN LEGAL STL SIZE STREAM (stream.Length must equals 84+50*N , N Means triangle count)");
 
@@ -52,7 +60,7 @@ public class STL
 
             for (int i = 0; i < numbers; i++)
             {
-                stream.Read(triArr, 0, 50);
+                stream.Read(triArr, 0, STL_Triangle.TriangleRawDataLength);
                 tar.triangles[i] = STL_Triangle.Create(triArr);
                 //yield
             }
@@ -65,11 +73,22 @@ public class STL
         }
     }
 
+    public bool VerifyData()
+    {
+        if (header == null)
+            header = new STL_Header("stl_file_default_title");
+        if (triangles == null)
+            return false;
+        if (triangles.Length != this.TriangleCount)
+            return false;
+        return true;
+    }
 }
 
 
 public class STL_Header
 {
+    public const int STL_HEADER_SIZE = 80;
     public byte[] data;
 
     public STL_Header(byte[] data)
@@ -77,9 +96,35 @@ public class STL_Header
         this.data = data;
     }
 
+    public STL_Header(string v)
+    {
+        data = new byte[STL_HEADER_SIZE];
+        if (!string.IsNullOrEmpty(v))
+        {
+            var dat = Encoding.UTF8.GetBytes(v);
+            if (dat.Length > STL_HEADER_SIZE)
+            {
+                for (int i = 0; i < STL_HEADER_SIZE; i++)
+                    data[i] = dat[i];
+            }
+            else
+                dat.CopyTo(data, 0);
+        }
+    }
+
+    public byte[] GetVerifiedData()
+    {
+        if (data != null)
+        {
+            if (data.Length == STL_HEADER_SIZE)
+                return data;
+        }
+        return new byte[STL_HEADER_SIZE];
+    }
+
     public override string ToString()
     {
-        return System.Text.Encoding.Default.GetString(data);
+        return Encoding.Default.GetString(data);
     }
 }
 
@@ -87,6 +132,8 @@ public class STL_Header
 
 public class STL_Triangle
 {
+    public const int TriangleRawDataLength = 50;
+
     public float[] Normal;
     public float[] Vertex1;
     public float[] Vertex2;
@@ -94,17 +141,37 @@ public class STL_Triangle
     public ushort AttrData;
 
 
-    private STL_Triangle()
+    public STL_Triangle()
     {
-        Normal =  new float[3];
+        Normal = new float[3];
         Vertex1 = new float[3];
         Vertex2 = new float[3];
         Vertex3 = new float[3];
     }
 
+    internal byte[] GetRawData()
+    {
+        var data = new byte[TriangleRawDataLength];
+        Func<float, byte[]> _toBytes = val => BitConverter.GetBytes(val);
+        Func<float[], byte[]> _vectorToBytes = v =>
+        {
+            var arr = new byte[12];
+            _toBytes(v[0]).CopyTo(arr, 0);
+            _toBytes(v[1]).CopyTo(arr, 4);
+            _toBytes(v[2]).CopyTo(arr, 8);
+            return arr;
+        };
+        _vectorToBytes(Normal).CopyTo(data, 0);
+        _vectorToBytes(Vertex1).CopyTo(data, 12);
+        _vectorToBytes(Vertex2).CopyTo(data, 24);
+        _vectorToBytes(Vertex3).CopyTo(data, 36);
+        BitConverter.GetBytes(AttrData).CopyTo(data, 48);
+        return data;
+    }
+
     public static STL_Triangle Create(byte[] data)
     {
-        if (data != null && data.Length == 50)
+        if (data != null && data.Length == TriangleRawDataLength)
         {
             int position = 0;
 
