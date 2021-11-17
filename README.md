@@ -14,7 +14,25 @@ easy read stl Binary file
       //do something you want.
     }
 ```
- 3. enjoy.
+
+ 3. create save an stl file. 
+
+```C#
+    var stl = STL.CreateEmpty();
+    stl.header = new STL_Header("hinx_test_stl");
+    stl.triangles = new STL_Triangle[] { new STL_Triangle {
+       Normal = new float[]{ 0,1,0},
+       Vertex1 = new float[]{ 0,0,0},
+       Vertex2 = new float[]{ 1,0,0},
+       Vertex3 = new float[]{ 0,0,1},
+       AttrData = 0
+    } };
+    stl.TriangleCount = 1;
+    using (var fs = System.IO.File.Create("triangle.stl"))
+       stl.SaveToBinary(fs);
+```
+
+ 4. enjoy.
 
 
 # Docoments
